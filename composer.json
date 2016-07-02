@@ -8,6 +8,12 @@
         "php": ">=5.4.0",
         "zxwqxtu/phpdb": "dev-master"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/zxwqxtu/phpdb.git"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "FlyPhp\\": "src/"
