@@ -48,7 +48,7 @@ class Init
         if (!empty(Config::get('errorLog'))) {
             $errorLog = Config::get('errorLog');
         } else {
-            $errorLog = ROOT_PATH . "/logs/".$this->_route->getAppName(); 
+            $errorLog = ROOT_PATH . "/logs"; 
             !is_dir($errorLog) && mkdir($errorLog, 0777, true);
             $errorLog .= "/error.log";
         }
@@ -65,9 +65,6 @@ class Init
     protected function init()
     {
         $this->_route = Route::getInstance();
-
-        //定义APP_PATH常量
-        define('APP_PATH', ROOT_PATH.'/app/'.$this->_route->getAppName());
         define('DEBUG', Config::get('debug'));
 
         //log日志
@@ -77,36 +74,6 @@ class Init
         
         //url解释对应action,controller
         $this->_route->urlToClass();
-
-        //加载必要的文件
-        $this->loadRequire(); 
-    }
-
-    /**
-     * 加载必要的文件
-     *
-     * @return void
-     */
-    protected function loadRequire()
-    {
-        $arr = array(
-            SYSTEM_PATH => Config::getSystem('require'),
-            ROOT_PATH => Config::getRoot('require'),
-            APP_PATH => Config::getApp('require')
-        );
-
-        foreach ($arr as $dir => $files) {
-            if (empty($files)) {
-                continue;
-            }
-
-            foreach ($files as $file) {
-                $realFile = realpath($dir.'/'.$file);
-                if (!empty($realFile)) {
-                    require_once $realFile;    
-                }
-            }
-        }
     }
     
     /**
@@ -121,7 +88,7 @@ class Init
         $params = $this->_route->getParams();
 
         $controller = empty($controller) ? Config::get('indexController') : $controller;
-        $className = "App\\Controllers\\".ucfirst($controller);
+        $className = "App\\Controller\\".ucfirst($controller);
         if (!class_exists($className)) {
             throw new \Exception("CONTROLLER-NO-EXISTS:{$controller}");
             return false;

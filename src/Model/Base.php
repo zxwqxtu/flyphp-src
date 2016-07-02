@@ -10,7 +10,7 @@
  * @tag      Models Base
  * @version  GIT: $Id$
  */
-namespace FlyPhp\Models;
+namespace FlyPhp\Model;
 
 use FlyPhp\Core\Config;
 use FlyPhp\Core\Single;

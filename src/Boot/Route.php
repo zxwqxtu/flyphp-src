@@ -46,11 +46,6 @@ class Route
     private $_params = array();
 
     /**
-     * @var string appName
-     */
-    private $_appName= '';
-
-    /**
      * 初始化运行
      */
     protected function init()
@@ -60,9 +55,6 @@ class Route
             if (empty($_SERVER['argv'][1])) {
                 throw new \Exception('UNDEFINED-APPNAME');
             }
-
-            $this->_appName = $_SERVER['argv'][1];
-
             $tmp = $_SERVER['argv'];
             unset($tmp[1]);
             $this->_route = array_values($tmp);
@@ -70,8 +62,6 @@ class Route
             $this->_route[0] = 'index.php';
 
         } else {
-            $this->_appName = Config::get('app', $_SERVER['HTTP_HOST']);
-
             $this->_route = explode('/', $_SERVER['PHP_SELF']);
         }
     }
@@ -167,15 +157,5 @@ class Route
     public function getParams()
     {
         return $this->_params;
-    }
-
-    /**
-     * 获取app名
-     *
-     * @return string
-     */
-    public function getAppName()
-    {
-        return $this->_appName;
     }
 }
