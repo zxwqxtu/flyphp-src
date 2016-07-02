@@ -3,7 +3,7 @@
     "description": "php framework easy simple",
     "keywords": ["flyPHP", "php", "framework"],
     "homepage": "https://github.com/zxwqxtu/flyPHP",
-    "type": "project",
+    "type": "library",
     "require": {
         "php": ">=5.4.0",
         "zxwqxtu/phpdb": "dev-master"
