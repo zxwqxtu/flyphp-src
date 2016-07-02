@@ -52,12 +52,7 @@ class Route
     {
         //命令行运行
         if (php_sapi_name() == 'cli') {
-            if (empty($_SERVER['argv'][1])) {
-                throw new \Exception('UNDEFINED-APPNAME');
-            }
-            $tmp = $_SERVER['argv'];
-            unset($tmp[1]);
-            $this->_route = array_values($tmp);
+            $this->_route = array_values($_SERVER['argv']);
             //绝对路径换成index.php
             $this->_route[0] = 'index.php';
 
