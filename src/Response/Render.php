@@ -32,9 +32,6 @@ class Render
     /** @var array headers */
     protected $headers = array();
 
-    /** @var array response */
-    protected $response = array();
-
     /** @var string viewContent */
     public $viewContent = '';
 
@@ -78,19 +75,22 @@ class Render
      */
     public function view($data, $viewFile, $layoutFile)
     {
-        $this->header(); 
-        $this->response = $data;
-
-        ob_start();
-        include $viewFile;
-        $this->viewContent = ob_get_contents();
-        ob_end_clean();
-
+        $this->viewContent = $this->getIncludeContents($viewFile, $data);
         if (!empty($layoutFile)) {
-            include $layoutFile;
+            $result = $this->getIncludeContents($layoutFile, $data);
         } else {
-            echo $this->viewContent;
+            $result = $this->viewContent;
         }
+
+        //etag
+        $etag = sha1($result);
+        if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && $etag == $_SERVER['HTTP_IF_NONE_MATCH']) {
+            $this->setHeader('HTTP/1.1 304 Not Modified');
+            return $this->header(); 
+        }
+        $this->setHeader('Etag', $etag);
+        $this->header(); 
+        echo $result;
         exit;
     }
 
@@ -102,7 +102,11 @@ class Render
     protected function header()
     {
         foreach ($this->headers as $k => $v) {
-            header("{$k}: {$v}");
+            if (is_numeric($k)) {
+                header($v);
+            } else {
+                header("{$k}: {$v}");
+            }
         }
         return true;
     }
@@ -117,16 +121,25 @@ class Render
      */
     public function output($data, $headerFlag=true)
     {
-        if (!empty($headerFlag)) {
-            $this->header();
-        }
-
         $str = '';
         if (is_array($data) || is_object($data)) {
             $str = json_encode($data);
         } elseif (!is_resource($data)) {
             $str = $data;
         }
+
+        if (empty($headerFlag)) {
+            echo $str;
+            exit;
+        }
+        //etag
+        $etag = sha1($str);
+        if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && $etag == $_SERVER['HTTP_IF_NONE_MATCH']) {
+            $this->setHeader('HTTP/1.1 304 Not Modified');
+            return $this->header(); 
+        }
+        $this->setHeader('Etag', $etag);
+        $this->header(); 
         echo $str;
         exit;
     }
@@ -142,6 +155,28 @@ class Render
     public function getConfig($key=null, $item=null)
     {
         return Config::get($key, $item);
+    }
+
+    /**
+     * 获取include执行内容
+     *
+     * @param string $file file
+     * @param arrya  $data array 
+     *
+     * @return string|false
+     */
+    public function getIncludeContents($filename, $data=[])
+    {
+        is_array($data) && extract($data);
+
+        if (is_file($filename)) {
+            ob_start();
+            include $filename;
+            $contents = ob_get_contents();
+            ob_end_clean();
+            return $contents;
+        }
+        return false;
     }
 }
 
