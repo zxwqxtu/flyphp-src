@@ -90,16 +90,16 @@ class Init
         $controller = empty($controller) ? Config::get('indexController') : $controller;
         $className = "App\\Controller\\".ucfirst($controller);
         if (!class_exists($className)) {
-            throw new \Exception("CONTROLLER-NO-EXISTS:{$controller}");
-            return false;
+            return Render::getInstance()->setHeaders(['HTTP/1.1 404 Not Found'])
+                ->output("404 Not Found [CONTROLLER-NO-EXISTS:{$controller}]");
         }
 
         $ctrl = new $className();
 
         $action = empty($action) ? $ctrl->getDefaultAction(): $action;
         if (!empty($action) && !method_exists($className, $action)) {
-            throw new \Exception("ACTION-NO-EXISTS:{$controller}->{$action}");
-            return false;
+            return Render::getInstance()->setHeaders(['HTTP/1.1 404 Not Found'])
+                ->output("404 Not Found [ACTION-NO-EXISTS:{$controller}->{$action}]");
         }
 
         $data = call_user_func_array(array($ctrl, $action), $params);
