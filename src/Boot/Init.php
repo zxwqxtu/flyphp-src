@@ -105,15 +105,13 @@ class Init
         $data = call_user_func_array(array($ctrl, $action), $params);
 
         if (php_sapi_name() == 'cli') {
-            Render::getInstance()->output($data, false);
+            return Render::getInstance()->output($data, false);
         } elseif (empty($ctrl->getView())) {
-            Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
+            return Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
         } elseif (isset($_SERVER['Content-Type']) && $_SERVER['Content-Type'] == 'application/json') {
-            Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
+            return Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
         }
-        Render::getInstance()->setHeaders($ctrl->getHeaders())
+        return Render::getInstance()->setHeaders($ctrl->getHeaders())
             ->view($data, $ctrl->getViewFile(), $ctrl->getLayoutFile());
-
-        return true;
     }
 }
