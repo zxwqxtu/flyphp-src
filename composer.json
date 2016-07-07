@@ -6,7 +6,7 @@
     "type": "library",
     "require": {
         "php": ">=5.4.0",
-        "zxwqxtu/phpdb": "dev-master"
+        "zxwqxtu/phpdb": "2.0.0"
     },
     "repositories": [
         {
