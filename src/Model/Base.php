@@ -67,7 +67,15 @@ abstract class Base
      */
     public function find($id)
     {
-        return $this->findOneBy(['id' => intval($id)]);
+        switch ($this->dbType) {
+        case 'mongodb':
+            $where = ['id' => $id];
+            break;
+        default:
+            $where = [['id', intval($id)]];
+        }
+
+        return $this->findOneBy($where);
     }
     /**
      * 返回所有记录
