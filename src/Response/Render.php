@@ -178,5 +178,15 @@ class Render
         }
         return false;
     }
+
+    /**
+     * 输出防止攻击
+     *
+     * @return string
+     */
+    public function html($str)
+    {
+        return htmlspecialchars($str, ENT_QUOTES);
+    }
 }
 

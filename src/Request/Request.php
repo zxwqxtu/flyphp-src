@@ -40,7 +40,7 @@ class Request
     public function __call($method, $arguments)
     {
         $key = $arguments[0];
-        $type = $arguments[1];
+        $type = isset($arguments[1])? $arguments[1]: 'string';
         $default = isset($arguments[2])? $arguments[2]: null;
 
         $val = $this->getVariable($method);
