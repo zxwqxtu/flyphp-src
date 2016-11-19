@@ -97,12 +97,13 @@ class Init
         $ctrl = new $className();
 
         $action = empty($action) ? $ctrl->getDefaultAction(): $action;
-        if (!empty($action) && !method_exists($className, $action)) {
+        $method = $action."Action";
+        if (empty($action) || !method_exists($className, $method)) {
             return Render::getInstance()->setHeaders(['HTTP/1.1 404 Not Found'])
                 ->output("404 Not Found [ACTION-NO-EXISTS:{$controller}->{$action}]");
         }
 
-        $data = call_user_func_array(array($ctrl, $action), $params);
+        $data = call_user_func_array(array($ctrl, $method), $params);
 
         if (php_sapi_name() == 'cli') {
             return Render::getInstance()->output($data, false);
