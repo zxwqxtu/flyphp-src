@@ -165,11 +165,11 @@ abstract class Base
             $where = $this->buildWhere($where);
             $value = '';
             foreach ($data as $k => $v) {
-                $v = $this->db->quote($v);
-                $value .= "{$k}={$v},";
+                $value .= "{$k}=?,";
             }
             $value = trim($value, ',');
-            return $this->db->exec("UPDATE {$this->table} SET {$value} {$where}");
+            $stmt = $this->db->prepare("UPDATE {$this->table} SET {$value} {$where}");
+            return $stmt->execute(array_values($data));
         }
     }
     /**
