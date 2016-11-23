@@ -145,6 +145,15 @@ abstract class Base
         }
     }
     /**
+     * 获取一条记录ID
+     *
+     * @return int 
+     */
+    public function lastInsertId()
+    {
+        return $this->db->lastInsertId();
+    }
+    /**
      * 更新记录
      *
      * @param array $data  []
