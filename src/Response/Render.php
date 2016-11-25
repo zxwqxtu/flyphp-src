@@ -161,7 +161,7 @@ class Render
      * 获取include执行内容
      *
      * @param string $file file
-     * @param arrya  $data array 
+     * @param array  $data array 
      *
      * @return string|false
      */
@@ -182,11 +182,29 @@ class Render
     /**
      * 输出防止攻击
      *
+     * @param string $str 字符串
+     *
      * @return string
      */
     public function html($str)
     {
         return htmlspecialchars($str, ENT_QUOTES);
+    }
+
+    /**
+     * 截断字符串 
+     *
+     * @param string $str 字符串
+     * @param int    $len 长度
+     *
+     * @return string
+     */
+    public function truncate($str, $len=20)
+    {
+        if (mb_strlen($str) > $len) {
+            return mb_substr($str, 0, $len, 'utf-8').'...';
+        }
+        return $str;
     }
 }
 
