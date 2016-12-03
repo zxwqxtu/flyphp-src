@@ -80,27 +80,38 @@ abstract class Base
     /**
      * 返回所有记录
      *
+     * @param array $sort  []
+     *
      * @return array|cursor
      */
-    public function findAll()
+    public function findAll($sort=[])
     {
-        return $this->findBy();
+        return $this->findBy([], $sort);
     }
     /**
      * 返回符合条件的所有记录
      *
      * @param array $where []
+     * @param array $sort  []
      *
      * @return array|cursor
      */
-    public function findBy($where=[])
+    public function findBy($where=[], $sort=[])
     {
         switch ($this->dbType) {
         case 'mongodb':
-            return $this->db->selectCollection($this->collection)->find($where);
+            $cursor = $this->db->selectCollection($this->collection)->find($where);
+            if (empty($sort)) {
+                return $cursor;
+            }
+            return $cursor->sort($sort);
         default:
             $where = $this->buildWhere($where);
-            $stmt = $this->db->prepare("SELECT * FROM {$this->table} {$where}");
+            $sql = "SELECT * FROM {$this->table} {$where}";
+            if (!empty($sort)) {
+                $sql .= " ORDER BY ".implode($sort, ',');
+            }
+            $stmt = $this->db->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll();
         }
@@ -144,6 +155,34 @@ abstract class Base
             return $stmt->execute(array_values($data));
         }
     }
+    /**
+     * 插入多条记录
+     *
+     * @param array $data []
+     *
+     * @return bool
+     */
+    public function insertMany($data=[])
+    {
+        switch ($this->dbType) {
+        case 'mongodb':
+            return $this->db->selectCollection($this->collection)->batchInsert($data);
+        default:
+            $columns = implode(',', array_keys($data[0]));
+            $valuesStr = '';
+            $db = $this->db;
+            foreach ($data as $item) {
+                $item = array_map(function ($n) use($db) { 
+                    return $db->quote($n);
+                }, $item);    
+                $value = implode(',', $item);
+                $valuesStr .= "({$value}),";
+            }
+            $valuesStr = trim($valuesStr, ',');
+            return $this->db->exec("INSERT INTO {$this->table}({$columns}) VALUES {$valuesStr}");
+        }
+    }
+
     /**
      * 获取一条记录ID
      *
