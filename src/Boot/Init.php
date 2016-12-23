@@ -109,7 +109,7 @@ class Init
             return Render::getInstance()->output($data, false);
         } elseif (empty($ctrl->getView())) {
             return Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
-        } elseif (isset($_SERVER['Content-Type']) && $_SERVER['Content-Type'] == 'application/json') {
+        } elseif (isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json') {
             return Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
         }
         return Render::getInstance()->setHeaders($ctrl->getHeaders())
