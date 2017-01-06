@@ -193,4 +193,53 @@ abstract class Base
     {
         return $this->view;
     }
+
+    /**
+     * http返回错误码
+     *
+     * @param int    $code code
+     * @param string $msg  msg 
+     *
+     * @return string
+     */
+    protected function httpException($code, $msg='')
+    {
+        switch(intval($code)) {
+        case 200:
+            $status = "200 OK";
+            break;
+        case 301:
+            $status = "301 Moved Permanently";
+            break;
+        case 302:
+            $status = "302 Move temporarily";
+            break;
+        case 304:
+            $status = "304 Not Modified";
+            break;
+        case 400:
+            $status = "400 Bad Request";
+            break;
+        case 401:
+            $status = "401 Unauthorized";
+            break;
+        case 403:
+            $status = "403 Forbidden";
+            break;
+        case 404:
+            $status = "404 Not Found";
+            break;
+        case 413:
+            $status = "413 Request Entity Too Large";
+            break;
+        case 500:
+            $status = "500 Internal Server Error";
+            break;
+        default:
+            $status = $code;
+        }
+
+        $this->headers = ["HTTP/1.1 {$status}"];
+        return $msg;
+    }
 }
