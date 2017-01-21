@@ -92,11 +92,19 @@ class Route
 
         $url = '/'.implode('/', $newRoute);
         $_url = Config::route($url);
-        if (empty($_url)) {
-            return $newRoute; 
+        if (!empty($_url)) {
+            return explode('/', trim($_url, '/'));
+        }
+
+        //正则匹配
+        foreach (Config::route() as $pattern => $replacement) {
+            $pattern = "#^{$pattern}$#i";
+            if (preg_match($pattern, $url)) {
+                return explode('/', trim(preg_replace($pattern, $replacement, $url), '/'));
+            }
         }
         
-        return explode('/', trim($_url, '/'));
+        return $newRoute; 
     }
 
     /**
