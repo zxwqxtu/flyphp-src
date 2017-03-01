@@ -83,7 +83,7 @@ class Render
         }
 
         //etag
-        $etag = sha1($result);
+        $etag = "W/".sha1($result);
         if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && $etag == $_SERVER['HTTP_IF_NONE_MATCH']) {
             $this->headers[] = 'HTTP/1.1 304 Not Modified';
             return $this->header(); 
