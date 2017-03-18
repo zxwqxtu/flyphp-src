@@ -83,7 +83,7 @@ class Render
         }
 
         //etag
-        $etag = "W/".sha1($result);
+        $etag = $this->etag($result);
         if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && $etag == $_SERVER['HTTP_IF_NONE_MATCH']) {
             $this->headers[] = 'HTTP/1.1 304 Not Modified';
             return $this->header(); 
@@ -112,6 +112,18 @@ class Render
     }
 
     /**
+     * 生成etag
+     *
+     * @param string $str string
+     *
+     * @return string
+     */
+    protected function etag($str)
+    {
+        return "W/".sha1($str);
+    }
+
+    /**
      * 输出结果
      *
      * @param string $data       数据
@@ -133,7 +145,7 @@ class Render
             exit;
         }
         //etag
-        $etag = sha1($str);
+        $etag = $this->etag($str);
         if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && $etag == $_SERVER['HTTP_IF_NONE_MATCH']) {
             $this->headers[] = 'HTTP/1.1 304 Not Modified';
             return $this->header(); 
