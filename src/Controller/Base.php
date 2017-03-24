@@ -134,6 +134,10 @@ abstract class Base
      */
     final public function getViewFile()
     {
+        if (empty($this->view)) {
+            return null;
+        }
+
         $fileName = ROOT_PATH.DIRECTORY_SEPARATOR.'views'; 
         $fileName .= DIRECTORY_SEPARATOR.$this->view.$this->viewSuffix;
         if (!file_exists($fileName)) {
