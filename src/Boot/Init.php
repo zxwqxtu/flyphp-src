@@ -103,16 +103,33 @@ class Init
                 ->output("404 Not Found [ACTION-NO-EXISTS:{$controller}->{$action}]");
         }
 
-        $data = call_user_func_array(array($ctrl, $method), $params);
+        $cacheKey = get_class($ctrl)."::".$method;
+        $cacheTime = intval(Config::cache($cacheKey));
+        $cacheFile = Config::get('cachePath').'/'.md5($_SERVER['REQUEST_URI']);
+        $flag = (empty(DEBUG) && $cacheTime > 0);
+
+        //debug=false环境下才有cache
+        if ($flag && file_exists($cacheFile) && filemtime($cacheFile)>time()-$cacheTime) {
+            $result = unserialize(file_get_contents($cacheFile));
+        } else {
+            $result = [
+                'data' => call_user_func_array(array($ctrl, $method), $params),
+                'view' => $ctrl->getViewFile(),
+                'layout' => $ctrl->getLayoutFile(),
+                'header' => $ctrl->getHeaders(),
+            ];
+
+            $flag && file_put_contents($cacheFile, serialize($result));
+        }
 
         if (php_sapi_name() == 'cli') {
-            return Render::getInstance()->output($data, false);
-        } elseif (empty($ctrl->getView())) {
-            return Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
+            return Render::getInstance()->output($result['data'], false);
+        } elseif (empty($result['view'])) {
+            return Render::getInstance()->setHeaders($result['header'])->output($result['data'], true);
         } elseif (isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json') {
-            return Render::getInstance()->setHeaders($ctrl->getHeaders())->output($data, true);
+            return Render::getInstance()->setHeaders($result['header'])->output($result['data'], true);
         }
-        return Render::getInstance()->setHeaders($ctrl->getHeaders())
-            ->view($data, $ctrl->getViewFile(), $ctrl->getLayoutFile());
+        return Render::getInstance()->setHeaders($result['header'])
+            ->view($result['data'], $result['view'], $result['layout']);
     }
 }
