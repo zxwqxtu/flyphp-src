@@ -123,14 +123,22 @@ abstract class Base
      *
      * @return array|cursor
      */
-    public function findOneBy($where=[])
+    public function findOneBy($where=[], $sort=[])
     {
         switch ($this->dbType) {
         case 'mongodb':
-            return $this->db->selectCollection($this->collection)->findOne($where);
+            $cursor = $this->db->selectCollection($this->collection)->find($where)->limit(1);
+            if (!empty($sort)) {
+                $cursor = $cursor->sort($sort);
+            }
+            return $cursor->getNext();
         default:
             $where = $this->buildWhere($where);
-            $stmt = $this->db->prepare("SELECT * FROM {$this->table} {$where}");
+            $sql = "SELECT * FROM {$this->table} {$where}";
+            if (!empty($sort)) {
+                $sql .= " ORDER BY ".implode($sort, ',');
+            }
+            $stmt = $this->db->prepare("{$sql} LIMIT 1");
             $stmt->execute();
             return $stmt->fetch();
         }
