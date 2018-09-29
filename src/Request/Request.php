@@ -63,6 +63,9 @@ class Request
         case 'get':
             return $_GET;
         case 'post':
+            if (empty($_POST) && $this->server('CONTENT_TYPE') == 'application/json') {
+                $_POST = json_decode(file_get_contents('php://input'), true);
+            }
             return $_POST;
         case 'server':
             return $_SERVER;
