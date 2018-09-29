@@ -105,7 +105,12 @@ class Init
 
         $cacheKey = get_class($ctrl)."::".$method;
         $cacheTime = intval(Config::cache($cacheKey));
-        $cacheFile = Config::get('cachePath').'/'.md5($_SERVER['REQUEST_URI']);
+
+        if (php_sapi_name() == 'cli') {
+            $cacheFile = Config::get('cachePath').'/'.md5(json_encode($params));
+        } else {
+            $cacheFile = Config::get('cachePath').'/'.md5($_SERVER['REQUEST_URI']);
+        }
         $flag = (empty(DEBUG) && $cacheTime > 0);
 
         //debug=false环境下才有cache
