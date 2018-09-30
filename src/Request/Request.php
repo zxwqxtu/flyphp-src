@@ -122,7 +122,12 @@ class Request
         case 'float':
             return floatval($val);
         case 'array':
-            return empty($val)? array(): $val;
+            if (empty($val)) {
+                return [];
+            } elseif (is_string($val)) {
+                return json_decode($val, true);
+            }
+            return $val;
         default:
             return $val;
         }
