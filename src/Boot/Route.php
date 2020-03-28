@@ -155,7 +155,7 @@ class Route
     /**
      * 获取参数
      *
-     * @return string
+     * @return array
      */
     public function getParams()
     {
