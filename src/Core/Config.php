@@ -25,6 +25,29 @@ class Config
 {    
     /** @var array 配置数组 */
     private static $_config = array();
+    
+    /** @var string 项目根目录 */
+    private static $_rootPath = "";
+
+    /**
+     * 设置项目根目录
+     *
+     * @return void
+     */
+    public static function setRootPath($path)
+    {
+        self::$_rootPath = rtrim($path, '/');
+    }
+
+    /**
+     * 返回项目根目录
+     *
+     * @return string
+     */
+    public static function getRootPath()
+    {
+        return self::$_rootPath;
+    }
 
     /**
      * 获取config.php文件值
@@ -48,7 +71,7 @@ class Config
      */
     public static function load($file = 'config')
     {
-        $file = ROOT_PATH.DIRECTORY_SEPARATOR."config/{$file}.php";
+        $file = self::$_rootPath.DIRECTORY_SEPARATOR."config/{$file}.php";
         return file_exists($file)? include($file): [];
     }
 

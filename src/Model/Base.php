@@ -13,7 +13,6 @@
 namespace FlyPhp\Model;
 
 use FlyPhp\Core\Config;
-use FlyPhp\Core\Single;
 
 /**
  * Base.php
@@ -26,9 +25,6 @@ use FlyPhp\Core\Single;
  */
 abstract class Base
 {
-    //使用单例
-    use Single;
-
     /** @var string 数据库类型 */
     protected $dbType = 'mysql';
 
@@ -38,13 +34,45 @@ abstract class Base
     /** @var object 数据库 */
     protected $db = null;
     
+    /** @var array 实例对象 */
+    private static $_instance = array();
+
+    /**
+     * 构造函数
+     *
+     */
+    final private function __construct($dbName='')
+    {
+        $this->init($dbName);
+    }
+
+    /**
+     * 实例化
+     *
+     * @param $dbName string 选择哪个数据库
+     * @return \Boot\Init
+     */
+    final public static function getInstance($dbName="")
+    {
+        $className = get_called_class();
+        $key = $className . $dbName;
+
+        if (empty(self::$_instance[$key])) {
+            self::$_instance[$key] = new $className($dbName);
+        }        
+        return self::$_instance[$key];
+    }
+
     /**
      * 初始化
      *
      * @return void
      */
-    protected function init()
+    protected function init($dbName="")
     {
+        if (!empty($dbName)) {
+            $this->dbSelect = $dbName;
+        }
         $config = Config::database($this->dbType, $this->dbSelect);
 
         switch ($this->dbType) {

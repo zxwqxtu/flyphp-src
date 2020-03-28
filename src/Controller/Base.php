@@ -138,7 +138,7 @@ abstract class Base
             return null;
         }
 
-        $fileName = ROOT_PATH.DIRECTORY_SEPARATOR.'views'; 
+        $fileName = Config::getRootPath().DIRECTORY_SEPARATOR.'views'; 
         $fileName .= DIRECTORY_SEPARATOR.$this->view.$this->viewSuffix;
         if (!file_exists($fileName)) {
             throw new \Exception("tpl:{$fileName} not exist!");
@@ -159,7 +159,7 @@ abstract class Base
             return null;
         }
 
-        $fileName = ROOT_PATH.DIRECTORY_SEPARATOR.'layouts';
+        $fileName = Config::getRootPath().DIRECTORY_SEPARATOR.'layouts';
         if (!empty($this->theme)) {
             $fileName .= DIRECTORY_SEPARATOR.$this->theme;
         }

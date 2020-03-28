@@ -26,112 +26,162 @@ use FlyPhp\Response\Render;
  * @package  Boot
  * @author   wangqiang <960875184@qq.com>
  */
-class Init
+final class Init
 {
     //使用单例
     use Single;
 
-    /** @var \Boot\Route 路由器对象 */
-    private $_route = null;
+    /** @var string controller */
+    protected $controller = "";
+
+    /** @var string action */
+    protected $action = "";
+
+    /** @var array params */
+    protected $params = [];
 
     /**
-     * 错误日志记录
+     * 日志记录
+     *
+     * <p>项目config.php配置logPath，默认是项目logs目录,
+     * 错误日志文件error.log</p>
      *
      * @return void
      */
-    protected function logError()
+    protected function setLog()
     {
-        error_reporting(E_ALL);
-        ini_set('log_errors', 'On');
-        defined('DEBUG') && ini_set('display_errors', intval(DEBUG));
-
-        if (!empty(Config::get('errorLog'))) {
-            $errorLog = Config::get('errorLog');
-        } else {
-            $errorLog = ROOT_PATH . "/logs"; 
-            !is_dir($errorLog) && mkdir($errorLog, 0777, true);
-            $errorLog .= "/error.log";
+       $logPath = Config::get('logPath');
+        if (empty($logPath)) {
+            $logPath = Config::getRootPath().'/logs';
+            !is_dir($logPath) && mkdir($logPath, 0777, true);
         }
 
-        return ini_set('error_log', $errorLog);
+        error_reporting(E_ALL);
+        ini_set('log_errors', 'On');
+        ini_set('display_errors', empty(Config::get('debug')) ? 0 : 1);
+        ini_set('error_log', rtrim($logPath, '/').'/error.log');
     }
 
     /**
-     * 启动初始化
-     * 加载配置文件
+     * 设置项目根目录
      *
-     * @return void
-     */    
-    protected function init()
+     * @param $rootPath string web项目根目录
+     *
+     * @return \FlyPhp\Boot\Init
+     */
+    public function setWebPath($rootPath)
     {
-        $this->_route = Route::getInstance();
-        define('DEBUG', Config::get('debug'));
-
-        //log日志
-        $this->logError();
-        //时区
-        date_default_timezone_set(Config::get('timezone'));
-        
-        //url解释对应action,controller
-        $this->_route->urlToClass();
+        Config::setRootPath($rootPath);
+        return $this;
     }
     
     /**
-     * 启动程序，查找相应的文件controller，action
+     * 路由解析
+     * 查找相应的文件controller，action
+     *
+     * @return void
+     */
+    protected function loadRoute()
+    {
+        $route = Route::getInstance();
+
+        //url解释对应action,controller
+        $route->urlToClass();
+
+        //controller
+        $controller = $route->getController();
+        $controller = empty($controller) ? Config::get('indexController') : $controller;
+        $this->controller = "App\\Controller\\".ucfirst($controller);
+
+        //action
+        $action = $route->getAction();
+        if (!empty($action)) {
+            $this->action = $action."Action";
+        }
+
+        //params
+        $this->params = $route->getParams();
+    }
+
+    /**
+     * 缓存文件
+     *
+     * 返回文件，内容
+     * @return array
+     */
+    protected function getCache()
+    {
+        $cacheKey = $this->controller."::".$this->action;
+        $cacheTime = intval(Config::cache($cacheKey));
+
+        if (empty(Config::get('debug')) || $cacheTime == 0 || php_sapi_name() == 'cli') {
+            return null;
+        }
+
+        $result = '';
+        $cacheFile = Config::get('cachePath').'/'.md5($_SERVER['REQUEST_URI']);
+
+        if (file_exists($cacheFile) && filemtime($cacheFile) > time() - $cacheTime) {
+            $result = unserialize(file_get_contents($cacheFile));
+        }
+ 
+        return ['file' => $cacheFile, 'content' => $result];
+    }
+
+    /**
+     * 启动程序
      *
      * @return boolean
      */
     public function start()
     {
-        $controller = $this->_route->getController();
-        $action = $this->_route->getAction();
-        $params = $this->_route->getParams();
+        //时区
+        date_default_timezone_set(Config::get('timezone'));
+ 
+        //log日志
+        $this->setLog();
 
-        $controller = empty($controller) ? Config::get('indexController') : $controller;
-        $className = "App\\Controller\\".ucfirst($controller);
-        if (!class_exists($className)) {
-            return Render::getInstance()->setHeaders(['HTTP/1.1 404 Not Found'])
-                ->output("404 Not Found [CONTROLLER-NO-EXISTS:{$controller}]");
+        //解析路由
+        $this->loadRoute();
+
+        //controller不存在
+        if (!class_exists($this->controller)) {
+            error_log("CONTROLLER-NO-EXISTS[{$this->controller}]");
+            return Render::getInstance()->setHeaders(['HTTP/1.1 404 Not Found'])->output("404 Not Found");
         }
 
-        $ctrl = new $className();
+        //controller
+        $ctrl = new $this->controller();
 
-        $action = empty($action) ? $ctrl->getDefaultAction(): $action;
-        $method = $action."Action";
-        if (empty($action) || !method_exists($className, $method)) {
-            return Render::getInstance()->setHeaders(['HTTP/1.1 404 Not Found'])
-                ->output("404 Not Found [ACTION-NO-EXISTS:{$controller}->{$action}]");
+        if (empty($this->action)) {
+            $this->action = $ctrl->getDefaultAction()."Action";
+        }
+        if (empty($this->action) || !method_exists($this->controller, $this->action)) {
+            error_log("ACTION-NO-EXISTS[{$this->controller}::{$this->action}]");
+            return Render::getInstance()->setHeaders(['HTTP/1.1 404 Not Found'])->output("404 Not Found");
         }
 
-        $cacheKey = get_class($ctrl)."::".$method;
-        $cacheTime = intval(Config::cache($cacheKey));
+        //缓存
+        $cacheData = $this->getCache();
 
-        if (php_sapi_name() == 'cli') {
-            $cacheFile = Config::get('cachePath').'/'.md5(json_encode($params));
+        if (!empty($cacheData['content'])) {
+            $result = $cacheData['content'];
         } else {
-            $cacheFile = Config::get('cachePath').'/'.md5($_SERVER['REQUEST_URI']);
-        }
-        $flag = (empty(DEBUG) && $cacheTime > 0);
-
-        //debug=false环境下才有cache
-        if ($flag && file_exists($cacheFile) && filemtime($cacheFile)>time()-$cacheTime) {
-            $result = unserialize(file_get_contents($cacheFile));
-        } else {
-            $result = [
-                'data' => call_user_func_array(array($ctrl, $method), $params),
+             $result = [
+                'data' => call_user_func_array(array($ctrl, $this->action), $this->params),
                 'view' => $ctrl->getViewFile(),
                 'layout' => $ctrl->getLayoutFile(),
                 'header' => $ctrl->getHeaders(),
             ];
-
-            $flag && file_put_contents($cacheFile, serialize($result));
+             
+            !empty($cacheData['file']) && file_put_contents($cacheData['file'], serialize($result));
         }
 
         if (php_sapi_name() == 'cli') {
             return Render::getInstance()->output($result['data'], false);
         } elseif (empty($result['view'])) {
             return Render::getInstance()->setHeaders($result['header'])->output($result['data'], true);
-        } elseif (isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json') {
+        } elseif (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
             return Render::getInstance()->setHeaders($result['header'])->output($result['data'], true);
         }
         return Render::getInstance()->setHeaders($result['header'])
