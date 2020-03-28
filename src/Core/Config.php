@@ -36,7 +36,7 @@ class Config
      */
     public static function setRootPath($path)
     {
-        self::_rootPath = rtrim($path, '/')
+        self::$_rootPath = rtrim($path, '/');
     }
 
     /**
@@ -46,7 +46,7 @@ class Config
      */
     public static function getRootPath()
     {
-        return self::_rootPath
+        return self::$_rootPath;
     }
 
     /**
@@ -71,7 +71,7 @@ class Config
      */
     public static function load($file = 'config')
     {
-        $file = ROOT_PATH.DIRECTORY_SEPARATOR."config/{$file}.php";
+        $file = self::$_rootPath.DIRECTORY_SEPARATOR."config/{$file}.php";
         return file_exists($file)? include($file): [];
     }
 

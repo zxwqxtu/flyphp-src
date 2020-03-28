@@ -63,18 +63,6 @@ final class Init
     }
 
     /**
-     * 启动初始化
-     * 加载配置文件
-     *
-     * @return void
-     */    
-    protected function init()
-    {
-        //时区
-        date_default_timezone_set(Config::get('timezone'));
-    }
-    
-    /**
      * 设置项目根目录
      *
      * @param $rootPath string web项目根目录
@@ -147,6 +135,9 @@ final class Init
      */
     public function start()
     {
+        //时区
+        date_default_timezone_set(Config::get('timezone'));
+ 
         //log日志
         $this->setLog();
 
